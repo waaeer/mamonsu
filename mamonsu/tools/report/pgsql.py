@@ -3,7 +3,9 @@
 import logging
 import re
 import time
+
 from mamonsu.plugins.pgsql.pool import Pooler
+from mamonsu.tools.report.format import header_h1, key_val_h1, topline_h1
 
 
 class PostgresInfo(object):
@@ -260,29 +262,26 @@ order by b.size desc
 
     def printable_info(self):
 
-        def format_header(info):
-            return "\n###### {0:20} ###########################\n".format(info)
-
         def format_out(key, val):
             return "{0:40s}|    {1}\n".format(key, val)
 
         out = ''
         if not self.connected:
-            out += format_header('PGSQL Error')
-            out += format_out('Test connection', 'Failed')
+            out += header_h1('PGSQL Error')
+            out += key_val_h1('Test connection', 'Failed')
             return out
-        out += format_header('PostgreSQL')
-        out += format_out('version', self.common_info[1][0])
-        out += format_out('uptime', self.common_info[1][1])
-        out += format_out('cache hit', '{0} %'.format(self.common_info[1][2]))
-        out += format_out('tps', self.rate['_TPS'])
-        out += format_out('rollbacks', self.rate['_ROLLBACKS'])
-        out += format_header('Connections')
+        out += header_h1('PostgreSQL')
+        out += key_val_h1('version', self.common_info[1][0])
+        out += key_val_h1('uptime', self.common_info[1][1])
+        out += key_val_h1('cache hit', '{0} %'.format(self.common_info[1][2]))
+        out += key_val_h1('tps', self.rate['_TPS'])
+        out += key_val_h1('rollbacks', self.rate['_ROLLBACKS'])
+        out += header_h1('Connections')
         for info in self.connections:
             count, name = info
-            out += format_out(name, count)
+            out += key_val_h1(name, count)
         for key in self.QueryPgSettings[2]:
-            out += format_header(key)
+            out += header_h1(key)
             for row in self.settings:
                 for name in self.QueryPgSettings[2][key]:
                     if row[0] == name:
@@ -290,21 +289,17 @@ order by b.size desc
                         if row[2] is not None:
                             val += ' {0}'.format(row[2])
                             val = self._humansize(val)
-                        out += format_out(
+                        out += key_val_h1(
                             name, val)
-        out += format_header('Database sizes')
+        out += header_h1('Database sizes')
         for i, row in enumerate(self.dblist):
             if i == 0:
                 continue
-            out += format_out(row[0], self._humansize(row[1]))
-        out += format_header('Biggest tables')
-        big_table_header = ''
-        for name in self.BigTableInfo[1][1:]:
-            big_table_header = "{0}\t{1}".format(
-                big_table_header, name)
-        out += "{0:40s}|{1}\n".format('table', big_table_header)
+            out += key_val_h1(row[0], self._humansize(row[1]))
+        out += header_h1('Biggest tables')
+        out += topline_h1(self.BigTableInfo[1])
         for i, key in enumerate(self.biggest_tables):
-            out += format_out(
+            out += key_val_h1(
                 key, self.biggest_tables[key])
         return out
 

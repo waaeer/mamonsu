@@ -62,13 +62,18 @@ class SysInfoLinux(object):
                 return remember(self, name, self._dmesg_raw())
             elif name == 'kernel':
                 return remember(self, name, self._shell_out('uname -r'))
+            elif name == 'kernel_cmdline':
+                return remember(self, name, self._read_file('/proc/cmdline'))
             elif name == 'uptime_raw':
                 return remember(self, name, self._shell_out('uptime'))
+            elif name == 'boot_time_raw':
+                return remember(self, name, self._shell_out(
+                    "date --date=@$(grep ^btime /proc/stat | awk '{print $2}')"))
             elif name == 'mount_raw':
                 return remember(self, name, self._shell_out('mount'))
             elif name == 'iostat_raw':
                 return remember(self, name, self._shell_out(
-                        'iostat -x -N -m 1 2', timeout=3))
+                    'iostat -x -N -m 1 2', timeout=3))
             elif name == 'df_raw':
                 return remember(self, name, self._shell_out('df -h -P'))
             elif name == 'lspci_raw':
@@ -145,7 +150,7 @@ class SysInfoLinux(object):
             except Exception as e:
                 logging.debug('File "{0}" read error: {1}'.format(file, e))
                 pass
-        return result
+        return result.strip()
 
     def _cpu_arch(self):
         if os.path.isfile('/proc/cpuinfo'):
@@ -192,6 +197,12 @@ class SysInfoLinux(object):
             except:
                 continue
         return result
+
+    def sysctl_fetch(self, key):
+        try:
+            return self.sysctl[key]
+        except KeyError:
+            return '{sysctl not present}'
 
     def _dmesg_raw(self):
         shell = Shell('journalctl -k -n 1000')
@@ -274,7 +285,7 @@ class SysInfoLinux(object):
 
         result['_RAW'] = data
         for info in re.findall(r'^(\S+)\:\s+(\d+)\s+kB$', data, re.M):
-            result[info[0]] = int(info[1])*1024
+            result[info[0]] = int(info[1]) * 1024
         if 'MemTotal' in result:
             result['_TOTAL'] = result['MemTotal']
         if 'SwapTotal' in result:
