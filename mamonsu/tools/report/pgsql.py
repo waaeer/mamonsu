@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import re
 import time
 
 from mamonsu.plugins.pgsql.pool import Pooler
-from mamonsu.tools.report.format import header_h1, key_val_h1, topline_h1
+from mamonsu.tools.report.format import header_h1, key_val_h1, topline_h1, humansize
 
 
 class PostgresInfo(object):
@@ -112,7 +111,7 @@ select
     pg_catalog.shobj_description(d.oid, 'pg_database')
 from pg_catalog.pg_database d
   join pg_catalog.pg_tablespace t on d.dattablespace = t.oid
-order by 1 desc""",
+order by 1""",
         ('name', 'size', 'owner', 'encoding', 'collate',
             'ctype', 'privileges', 'tablespace', 'description')
     )
@@ -189,46 +188,6 @@ order by b.size desc
             logging.error('Test query error: {0}'.format(e))
             return False
 
-    _suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
-
-    def _humansize_bytes(self, nbytes):
-        if nbytes == 0:
-            return '0 B'
-        i = 0
-        while nbytes >= 1024 and i < len(self._suffixes) - 1:
-            nbytes /= 1024.
-            i += 1
-        f = ('%.2f' % nbytes).rstrip('0').rstrip('.')
-        return '%s %s' % (f, self._suffixes[i])
-
-    def _humansize(self, value):
-        m = re.search('(\d+) (\S+)', value)
-        if m is None:
-            return value
-        val, suff = m.group(1), m.group(2)
-        val, suff = int(val), suff.upper()
-        if suff == 'S':
-            return value
-        if suff == 'MS':
-            return value
-        if suff == 'B':
-            return self._humansize_bytes(val)
-        if suff == 'KB':
-            return self._humansize_bytes(val * 1024)
-        if suff == '4KB':
-            return self._humansize_bytes(val * 1024 * 4)
-        if suff == '8KB':
-            return self._humansize_bytes(val * 1024 * 8)
-        if suff == '16KB':
-            return self._humansize_bytes(val * 1024 * 16)
-        if suff == 'MB':
-            return self._humansize_bytes(val * 1024 * 1024)
-        if suff == 'GB':
-            return self._humansize_bytes(val * 1024 * 1024 * 1024)
-        if suff == 'TB':
-            return self._humansize_bytes(val * 1024 * 1024 * 1024 * 1024)
-        return value
-
     def store_raw(self):
 
         def format_obj(val):
@@ -288,14 +247,14 @@ order by b.size desc
                         val = row[1]
                         if row[2] is not None:
                             val += ' {0}'.format(row[2])
-                            val = self._humansize(val)
+                            val = humansize(val)
                         out += key_val_h1(
                             name, val)
         out += header_h1('Database sizes')
         for i, row in enumerate(self.dblist):
             if i == 0:
                 continue
-            out += key_val_h1(row[0], self._humansize(row[1]))
+            out += key_val_h1(row[0], humansize(row[1]))
         out += header_h1('Biggest tables')
         out += topline_h1(self.BigTableInfo[1])
         for i, key in enumerate(self.biggest_tables):

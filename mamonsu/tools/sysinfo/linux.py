@@ -262,6 +262,25 @@ class SysInfoLinux(object):
                 result['hyperthreading'] = True
         result['model'] = fetch_first(r'model name\s+\:\s+(.*)$', info)
         result['cache'] = fetch_first(r'cache size\s+\:\s+(.*)$', info)
+        result['flags'] = fetch_first(r'flags\s+\:\s+(.*)$', info)
+        flags = []
+        for flag in result['flags'].split():
+            flag = flag.strip()
+            if flag == 'ht':
+                flags.append('ht (hyper-threading)')
+            if flag == 'pae':
+                flags.append('pae (physical address extensions)')
+            if flag == 'lm':
+                flags.append('lm (64-bit)')
+            if flag == 'vmx':
+                flags.append('vmx (Intel hw-virt)')
+            if flag == 'svm':
+                flags.append('svm (AMD hw-virt)')
+            if flag == 'aes':
+                flags.append('aes (AES-NI)')
+            if flag == 'constant_tsc':
+                flags.append('constant_tsc (Constant Time Stamp Counter)')
+        result['_FLAGS_IMPORTANT'] = ', '.join(flags)
         result['speed'] = fetch_first(
             r'^cpu MHz\s+\:\s+(\d+\.\d+)$', info) + ' MHz'
         result['_TOTAL'] = 'physical = {0}, cores = {1}, '\
