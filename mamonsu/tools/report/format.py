@@ -62,8 +62,9 @@ def header_h1(info):
         TermColor.BOLD, TermColor.RED, info.upper(), TermColor.END)
 
 
-def key_val_h1(key, val):
-    return "  {0}{1}{2:12}{3}: {4}\n".format(
+def key_val_h1(key, val, spaces=12):
+    fmt = "  {0}{1}{2:" + str(spaces) + "}{3}: {4}\n"
+    return fmt.format(
         TermColor.BOLD, TermColor.PURPLE, key, TermColor.END, val)
 
 

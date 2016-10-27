@@ -249,7 +249,7 @@ order by b.size desc
                             val += ' {0}'.format(row[2])
                             val = humansize(val)
                         out += key_val_h1(
-                            name, val)
+                            name, val, 30)
         out += header_h1('Database sizes')
         for i, row in enumerate(self.dblist):
             if i == 0:

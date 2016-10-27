@@ -110,10 +110,10 @@ class SysInfoLinux(object):
                 return remember(self, name, self._systemd())
             elif name == 'top_by_cpu':
                 return remember(self, name, self._shell_out(
-                    'ps aux --sort=-pcpu | head -n 21'))
+                    'COLUMNS=150 ps aux --sort=-pcpu | head -n 21'))
             elif name == 'top_by_memory':
                 return remember(self, name, self._shell_out(
-                    'ps aux --sort=-rss | head -n 21'))
+                    'COLUMNS=150 ps aux --sort=-rss | head -n 21'))
         except KeyError:
             raise Exception('Unknown parameter: {0}'.format(name))
 
