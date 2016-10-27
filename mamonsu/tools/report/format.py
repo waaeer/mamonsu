@@ -14,15 +14,17 @@ class TermColor:
 
 # int (bytes) => str (human readable)
 def humansize_bytes(nbytes):
-    _suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+    fmt = '{0:6} {1}'
+    if not isinstance(nbytes, int):
+        return 'ERROR'
     if nbytes == 0:
-        return '0 B'
-    i = 0
-    while nbytes >= 1024 and i < len(_suffixes) - 1:
+        return fmt.format(0, 'B')
+    i, suffixes, = 0, ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+    while nbytes >= 1024 and i < len(suffixes) - 1:
         nbytes /= 1024.
         i += 1
     f = ('%.2f' % nbytes).rstrip('0').rstrip('.')
-    return '%s %s' % (f, _suffixes[i])
+    return fmt.format(f, suffixes[i])
 
 
 # str (some formates) => str (human readable)

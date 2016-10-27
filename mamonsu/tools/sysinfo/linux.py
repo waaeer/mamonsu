@@ -293,12 +293,11 @@ class SysInfoLinux(object):
     def _meminfo(self):
 
         data, result = self._read_file('/proc/meminfo'), {}
-        result['_RAW'] = NA
-        result['_TOTAL'] = NA
-        result['_SWAP'] = NA
-        result['_CACHED'] = NA
-        result['_DIRTY'] = NA
-        result['_BUFFERS'] = NA
+        for key in [
+                '_RAW', '_TOTAL', '_COMMITED', '_COMMITEDLIMIT', '_FREE', '_SWAPUSED'
+                '_SWAPTOTAL', '_CACHED', '_DIRTY', '_BUFFERS', '_HUGEPAGES']:
+            result[key] = NA
+
         if self.is_empty(data):
             return result
 
@@ -307,8 +306,18 @@ class SysInfoLinux(object):
             result[info[0]] = int(info[1]) * 1024
         if 'MemTotal' in result:
             result['_TOTAL'] = result['MemTotal']
+        if 'CommitLimit' in result:
+            result['_COMMITLIMIT'] = result['CommitLimit']
+        if 'Committed_AS' in result:
+            result['_COMMITTED'] = result['Committed_AS']
+        if 'MemFree' in result:
+            result['_FREE'] = result['MemFree']
         if 'SwapTotal' in result:
-            result['_SWAP'] = result['SwapTotal']
+            result['_SWAPTOTAL'] = result['SwapTotal']
+        if 'SwapTotal' in result and 'SwapFree' in result:
+            result['_SWAPUSED'] = result['SwapTotal'] - result['SwapFree']
+        if 'HugePages_Total' in result:
+            result['_HUGEPAGES'] = result['HugePages_Total']
         if 'Cached' in result:
             result['_CACHED'] = result['Cached']
         if 'Dirty' in result:

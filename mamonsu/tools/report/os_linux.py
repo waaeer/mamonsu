@@ -7,7 +7,7 @@ import logging
 
 from mamonsu import __version__ as mamonsu_version
 from mamonsu.tools.sysinfo.linux import SysInfoLinux
-from mamonsu.tools.report.format import header_h1, header_h2, key_val_h1, key_val_h2
+from mamonsu.tools.report.format import header_h1, header_h2, key_val_h1, key_val_h2, humansize_bytes
 
 
 class SystemInfo(SysInfoLinux):
@@ -47,11 +47,16 @@ class SystemInfo(SysInfoLinux):
         out += header_h1('TOP (by cpu)')
         out += self.top_by_cpu + "\n"
         out += header_h1('Memory')
-        out += key_val_h1('Total', self._humansize(self.meminfo['_TOTAL']))
-        out += key_val_h1('Cached', self._humansize(self.meminfo['_CACHED']))
-        out += key_val_h1('Buffers', self._humansize(self.meminfo['_BUFFERS']))
-        out += key_val_h1('Dirty', self._humansize(self.meminfo['_DIRTY']))
-        out += key_val_h1('Swap', self._humansize(self.meminfo['_SWAP']))
+        out += key_val_h1('Total', humansize_bytes(self.meminfo['_TOTAL']))
+        out += key_val_h1('Committed', humansize_bytes(self.meminfo['_COMMITTED']))
+        out += key_val_h1('CommitLimit', humansize_bytes(self.meminfo['_COMMITLIMIT']))
+        out += key_val_h1('Free', humansize_bytes(self.meminfo['_FREE']))
+        out += key_val_h1('Cached', humansize_bytes(self.meminfo['_CACHED']))
+        out += key_val_h1('Buffers', humansize_bytes(self.meminfo['_BUFFERS']))
+        out += key_val_h1('Dirty', humansize_bytes(self.meminfo['_DIRTY']))
+        out += key_val_h1('HugePages', humansize_bytes(self.meminfo['_HUGEPAGES']))
+        out += key_val_h1('SwapTotal', humansize_bytes(self.meminfo['_SWAPTOTAL']))
+        out += key_val_h1('SwapUsed', humansize_bytes(self.meminfo['_SWAPUSED']))
         out += header_h1('TOP (by memory)')
         out += self.top_by_memory + "\n"
         out += header_h1('System settings')
@@ -124,18 +129,6 @@ class SystemInfo(SysInfoLinux):
         info = self.printable_info()
         logging.error("\n{0}\n".format(self.store_raw()))
         return info.encode('ascii', 'ignore').decode('ascii')
-
-    _suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
-
-    def _humansize(self, nbytes):
-        if nbytes == 0:
-            return '0 B'
-        i = 0
-        while nbytes >= 1024 and i < len(self._suffixes) - 1:
-            nbytes /= 1024.
-            i += 1
-        f = ('%.2f' % nbytes).rstrip('0').rstrip('.')
-        return '%s %s' % (f, self._suffixes[i])
 
     def cpu_bench(self):
         def _is_prime(n):
